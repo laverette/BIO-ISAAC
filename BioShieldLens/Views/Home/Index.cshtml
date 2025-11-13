@@ -1,0 +1,282 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    var critical = ViewBag.Critical as List<Vulnerability> ?? new List<Vulnerability>();
+    var monitor = ViewBag.Monitor as List<Vulnerability> ?? new List<Vulnerability>();
+    var lowPriority = ViewBag.LowPriority as List<Vulnerability> ?? new List<Vulnerability>();
+    var stats = ViewBag.Stats as Dictionary<string, int> ?? new Dictionary<string, int>();
+    var trends = ViewBag.Trends as List<Trend> ?? new List<Trend>();
+    var intelNotes = ViewBag.IntelNotes as string;
+}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h1 class="display-4">BioShield Lens Dashboard</h1>
+        <p class="lead">AI-Powered Biological System Vulnerability Analysis</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Critical to Act Now</h5>
+                <h2 class="display-4">@stats.GetValueOrDefault("Critical to Act Now", 0)</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Monitor</h5>
+                <h2 class="display-4">@stats.GetValueOrDefault("Monitor", 0)</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Low Priority</h5>
+                <h2 class="display-4">@stats.GetValueOrDefault("Low Priority", 0)</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body">
+                <h5 class="card-title">Total</h5>
+                <h2 class="display-4">@stats.GetValueOrDefault("Total", 0)</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Intel Notes -->
+@if (!string.IsNullOrEmpty(intelNotes))
+{
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="bi bi-lightbulb"></i> Intelligence Notes</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">@intelNotes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Charts Row -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Vulnerability Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="vulnerabilityChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Trends by Sector</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Data Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Import Vulnerabilities</h5>
+            </div>
+            <div class="card-body">
+                <form asp-controller="Vulnerability" asp-action="Import" method="post">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="count" class="form-label">Number of vulnerabilities</label>
+                            <input type="number" class="form-control" id="count" name="count" value="50" min="1" max="2000" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="keyword" class="form-label">Keyword filter (optional)</label>
+                            <input type="text" class="form-control" id="keyword" name="keyword" placeholder="e.g., medical, hospital" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-download"></i> Import from NVD
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Critical Vulnerabilities -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="bi bi-exclamation-triangle"></i> Critical to Act Now</h5>
+            </div>
+            <div class="card-body">
+                @if (critical.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>CVE ID</th>
+                                    <th>Description</th>
+                                    <th>Bio Impact</th>
+                                    <th>Human Impact</th>
+                                    <th>Sector</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var vuln in critical.Take(10))
+                                {
+                                    <tr>
+                                        <td><strong>@vuln.CveId</strong></td>
+                                        <td>@(vuln.Description.Length > 100 ? vuln.Description.Substring(0, 100) + "..." : vuln.Description)</td>
+                                        <td><span class="badge bg-danger">@(vuln.BioImpactScore?.ToString("F1") ?? "N/A")</span></td>
+                                        <td><span class="badge bg-danger">@(vuln.HumanImpactScore?.ToString("F1") ?? "N/A")</span></td>
+                                        <td>@(vuln.AffectedSector ?? "Unknown")</td>
+                                        <td>@(vuln.DateDiscovered?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                                        <td>
+                                            <a asp-controller="Vulnerability" asp-action="Details" asp-route-id="@vuln.Id" class="btn btn-sm btn-outline-primary">View</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (critical.Count > 10)
+                    {
+                        <a asp-controller="Vulnerability" asp-action="Index" asp-route-priority="Critical to Act Now" class="btn btn-outline-danger">View All @critical.Count Critical Vulnerabilities</a>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">No critical vulnerabilities at this time.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monitor Vulnerabilities -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5><i class="bi bi-eye"></i> Monitor</h5>
+            </div>
+            <div class="card-body">
+                @if (monitor.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>CVE ID</th>
+                                    <th>Description</th>
+                                    <th>Bio Impact</th>
+                                    <th>Sector</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var vuln in monitor.Take(5))
+                                {
+                                    <tr>
+                                        <td><strong>@vuln.CveId</strong></td>
+                                        <td>@(vuln.Description.Length > 80 ? vuln.Description.Substring(0, 80) + "..." : vuln.Description)</td>
+                                        <td><span class="badge bg-warning">@(vuln.BioImpactScore?.ToString("F1") ?? "N/A")</span></td>
+                                        <td>@(vuln.AffectedSector ?? "Unknown")</td>
+                                        <td>@(vuln.DateDiscovered?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                                        <td>
+                                            <a asp-controller="Vulnerability" asp-action="Details" asp-route-id="@vuln.Id" class="btn btn-sm btn-outline-primary">View</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (monitor.Count > 5)
+                    {
+                        <a asp-controller="Vulnerability" asp-action="Index" asp-route-priority="Monitor" class="btn btn-outline-warning">View All @monitor.Count Monitor Items</a>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">No vulnerabilities to monitor at this time.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Vulnerability Distribution Chart
+        const vulnCtx = document.getElementById('vulnerabilityChart').getContext('2d');
+        new Chart(vulnCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical to Act Now', 'Monitor', 'Low Priority'],
+                datasets: [{
+                    data: [
+                        @stats.GetValueOrDefault("Critical to Act Now", 0),
+                        @stats.GetValueOrDefault("Monitor", 0),
+                        @stats.GetValueOrDefault("Low Priority", 0)
+                    ],
+                    backgroundColor: ['#dc3545', '#ffc107', '#17a2b8']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true
+            }
+        });
+
+        // Trends Chart
+        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        const trends = @Html.Raw(Json.Serialize(trends.Take(10).Select(t => new { Category = t.Category, Change = t.ChangePercentage })));
+        
+        new Chart(trendsCtx, {
+            type: 'bar',
+            data: {
+                labels: trends.map(t => t.Category),
+                datasets: [{
+                    label: 'Change %',
+                    data: trends.map(t => t.Change ?? 0),
+                    backgroundColor: trends.map(t => t.Change > 0 ? '#dc3545' : '#28a745')
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+}
+

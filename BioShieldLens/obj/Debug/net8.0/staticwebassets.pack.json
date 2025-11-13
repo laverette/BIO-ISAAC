@@ -1,0 +1,29 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\wwwroot\\css\\site.css",
+      "PackagePath": "staticwebassets\\css\\site.css"
+    },
+    {
+      "Id": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\wwwroot\\js\\site.js",
+      "PackagePath": "staticwebassets\\js\\site.js"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.BioShieldLens.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.BioShieldLens.props",
+      "PackagePath": "build\\BioShieldLens.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.BioShieldLens.props",
+      "PackagePath": "buildMultiTargeting\\BioShieldLens.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.BioShieldLens.props",
+      "PackagePath": "buildTransitive\\BioShieldLens.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
