@@ -1,0 +1,58 @@
+{
+  "Version": 1,
+  "Hash": "y5Fh9DSLZCucMb1/rGSVgFx3J/Ys1cdQkC4dG34JdN0=",
+  "Source": "BioShieldLens",
+  "BasePath": "_content/BioShieldLens",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "BioShieldLens\\wwwroot",
+      "Source": "BioShieldLens",
+      "ContentRoot": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\wwwroot\\",
+      "BasePath": "_content/BioShieldLens",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\wwwroot\\css\\site.css",
+      "SourceId": "BioShieldLens",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\wwwroot\\",
+      "BasePath": "_content/BioShieldLens",
+      "RelativePath": "css/site.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\site.css"
+    },
+    {
+      "Identity": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\wwwroot\\js\\site.js",
+      "SourceId": "BioShieldLens",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\wwwroot\\",
+      "BasePath": "_content/BioShieldLens",
+      "RelativePath": "js/site.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\site.js"
+    }
+  ]
+}
