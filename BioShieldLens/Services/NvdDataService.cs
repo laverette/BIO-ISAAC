@@ -44,8 +44,11 @@ public class NvdDataService : INvdDataService
 
         try
         {
-            // Fetch recent CVEs
-            var url = $"{apiUrl}?resultsPerPage={Math.Min(maxResults, 2000)}&pubStartDate={DateTime.UtcNow.AddDays(-30):yyyy-MM-ddTHH:mm:ss:fff UTC-05:00}";
+            // Fetch CVEs from 2024 (confirmed to exist in NVD database)
+            // Using a fixed date range to ensure we get real data
+            var startDate = "2024-10-01T00:00:00.000Z";
+            var endDate = "2024-11-01T00:00:00.000Z";
+            var url = $"{apiUrl}?resultsPerPage={Math.Min(maxResults, 2000)}&pubStartDate={startDate}&pubEndDate={endDate}";
             
             if (!string.IsNullOrEmpty(keywordFilter))
             {

@@ -8,44 +8,60 @@
     var intelNotes = ViewBag.IntelNotes as string;
 }
 
-<div class="row mt-4">
-    <div class="col-12">
-        <h1 class="display-4">BioShield Lens Dashboard</h1>
+<div class="row">
+    <div class="col-12 hero-section">
+        <h1>BioShield Lens</h1>
         <p class="lead">AI-Powered Biological System Vulnerability Analysis</p>
     </div>
 </div>
 
 <!-- Statistics Cards -->
 <div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-white bg-danger stat-card">
             <div class="card-body">
-                <h5 class="card-title">Critical to Act Now</h5>
-                <h2 class="display-4">@stats.GetValueOrDefault("Critical to Act Now", 0)</h2>
+                <div class="stat-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <h5 class="card-title">Critical</h5>
+                </div>
+                <div class="stat-number">@stats.GetValueOrDefault("Critical to Act Now", 0)</div>
+                <p class="stat-description">Immediate action required</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-white bg-warning stat-card">
             <div class="card-body">
-                <h5 class="card-title">Monitor</h5>
-                <h2 class="display-4">@stats.GetValueOrDefault("Monitor", 0)</h2>
+                <div class="stat-icon">
+                    <i class="bi bi-eye-fill"></i>
+                    <h5 class="card-title">Monitor</h5>
+                </div>
+                <div class="stat-number">@stats.GetValueOrDefault("Monitor", 0)</div>
+                <p class="stat-description">Requires monitoring</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-info">
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-white bg-info stat-card">
             <div class="card-body">
-                <h5 class="card-title">Low Priority</h5>
-                <h2 class="display-4">@stats.GetValueOrDefault("Low Priority", 0)</h2>
+                <div class="stat-icon">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <h5 class="card-title">Low Priority</h5>
+                </div>
+                <div class="stat-number">@stats.GetValueOrDefault("Low Priority", 0)</div>
+                <p class="stat-description">Low impact items</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-secondary">
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-white bg-secondary stat-card">
             <div class="card-body">
-                <h5 class="card-title">Total</h5>
-                <h2 class="display-4">@stats.GetValueOrDefault("Total", 0)</h2>
+                <div class="stat-icon">
+                    <i class="bi bi-list-check"></i>
+                    <h5 class="card-title">Total</h5>
+                </div>
+                <div class="stat-number">@stats.GetValueOrDefault("Total", 0)</div>
+                <p class="stat-description">All vulnerabilities</p>
             </div>
         </div>
     </div>
@@ -97,9 +113,20 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5>Import Vulnerabilities</h5>
+                <h5>Data Management</h5>
             </div>
             <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <form asp-controller="Vulnerability" asp-action="LoadSampleData" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-outline-success">
+                                <i class="bi bi-database-fill-add"></i> Load Sample Data
+                            </button>
+                        </form>
+                        <small class="text-muted ms-2">Load demo bio-related vulnerabilities to see the system in action</small>
+                    </div>
+                </div>
+                <hr />
                 <form asp-controller="Vulnerability" asp-action="Import" method="post">
                     <div class="row">
                         <div class="col-md-4">
@@ -112,7 +139,7 @@
                         </div>
                         <div class="col-md-4 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-download"></i> Import from NVD
+                                <i class="bi bi-download"></i> Import from NVD API
                             </button>
                         </div>
                     </div>
@@ -279,4 +306,6 @@
         });
     </script>
 }
+
+
 
