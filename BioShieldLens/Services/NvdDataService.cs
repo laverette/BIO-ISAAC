@@ -44,101 +44,159 @@ public class NvdDataService : INvdDataService
 
         try
         {
-            // Fetch CVEs from 2024 (confirmed to exist in NVD database)
-            // Using a fixed date range to ensure we get real data
+            // Use a more recent date range to avoid 404 errors with large requests
+            // NVD API works better with smaller, more recent date ranges
             var startDate = "2024-10-01T00:00:00.000Z";
-            var endDate = "2024-11-01T00:00:00.000Z";
-            var url = $"{apiUrl}?resultsPerPage={Math.Min(maxResults, 2000)}&pubStartDate={startDate}&pubEndDate={endDate}";
+            var endDate = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
             
-            if (!string.IsNullOrEmpty(keywordFilter))
+            // Limit resultsPerPage to 200 (NVD API recommendation)
+            // Use pagination for larger requests
+            var pageSize = Math.Min(200, maxResults);
+            var totalFetched = 0;
+            var startIndex = 0;
+
+            while (totalFetched < maxResults)
             {
-                url += $"&keywordSearch={Uri.EscapeDataString(keywordFilter)}";
-            }
-
-            _logger.LogInformation($"Fetching vulnerabilities from NVD: {url}");
-
-            var response = await httpClient.GetStringAsync(url);
-            var nvdResponse = JsonSerializer.Deserialize<NvdApiResponse>(response, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (nvdResponse?.Vulnerabilities == null)
-            {
-                _logger.LogWarning("No vulnerabilities found in NVD response");
-                return 0;
-            }
-
-            foreach (var item in nvdResponse.Vulnerabilities.Take(maxResults))
-            {
-                var cve = item.Cve;
-                if (cve == null) continue;
-
-                // Check if already exists
-                var exists = await _context.Vulnerabilities
-                    .AnyAsync(v => v.CveId == cve.Id);
-
-                if (exists) continue;
-
-                // Extract description
-                var description = cve.Descriptions?
-                    .FirstOrDefault(d => d.Lang == "en")?.Value ?? "No description available";
-
-                // Check if bio-related
-                var isBioRelated = _bioKeywords.Any(keyword =>
-                    description.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                    (cve.Id != null && cve.Id.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
-
-                // Only import bio-related or if keyword filter is specified
-                if (!isBioRelated && string.IsNullOrEmpty(keywordFilter))
+                var remaining = maxResults - totalFetched;
+                var currentPageSize = Math.Min(pageSize, remaining);
+                
+                var url = $"{apiUrl}?resultsPerPage={currentPageSize}&startIndex={startIndex}&pubStartDate={startDate}&pubEndDate={endDate}";
+                
+                if (!string.IsNullOrEmpty(keywordFilter))
                 {
-                    continue;
+                    url += $"&keywordSearch={Uri.EscapeDataString(keywordFilter)}";
                 }
 
-                // Extract CVSS score if available
-                decimal? cvssScore = null;
-                if (cve.Metrics?.CvssMetricV31 != null && cve.Metrics.CvssMetricV31.Any())
+                _logger.LogInformation($"Fetching vulnerabilities from NVD (page {startIndex / pageSize + 1}): {url}");
+
+                var response = await httpClient.GetAsync(url);
+                
+                if (!response.IsSuccessStatusCode)
                 {
-                    var metric = cve.Metrics.CvssMetricV31[0];
-                    if (metric?.CvssData != null)
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"NVD API returned {response.StatusCode}: {errorContent}");
+                    
+                    // If 404 or other error on first request, try with smaller date range
+                    if (startIndex == 0 && response.StatusCode == System.Net.HttpStatusCode.NotFound)
                     {
-                        cvssScore = (decimal)metric.CvssData.BaseScore;
+                        _logger.LogWarning("Retrying with smaller date range (last 3 months)");
+                        startDate = DateTime.UtcNow.AddMonths(-3).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                        url = $"{apiUrl}?resultsPerPage={currentPageSize}&startIndex={startIndex}&pubStartDate={startDate}&pubEndDate={endDate}";
+                        if (!string.IsNullOrEmpty(keywordFilter))
+                        {
+                            url += $"&keywordSearch={Uri.EscapeDataString(keywordFilter)}";
+                        }
+                        response = await httpClient.GetAsync(url);
                     }
-                }
-                else if (cve.Metrics?.CvssMetricV30 != null && cve.Metrics.CvssMetricV30.Any())
-                {
-                    var metric = cve.Metrics.CvssMetricV30[0];
-                    if (metric?.CvssData != null)
+                    
+                    if (!response.IsSuccessStatusCode)
                     {
-                        cvssScore = (decimal)metric.CvssData.BaseScore;
-                    }
-                }
-                else if (cve.Metrics?.CvssMetricV2 != null && cve.Metrics.CvssMetricV2.Any())
-                {
-                    var metric = cve.Metrics.CvssMetricV2[0];
-                    if (metric?.CvssData != null)
-                    {
-                        cvssScore = (decimal)metric.CvssData.BaseScore;
+                        throw new HttpRequestException($"NVD API returned {response.StatusCode}. Try a smaller count or different date range.");
                     }
                 }
 
-                var vulnerability = new Vulnerability
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var nvdResponse = JsonSerializer.Deserialize<NvdApiResponse>(responseContent, new JsonSerializerOptions
                 {
-                    CveId = cve.Id ?? "UNKNOWN",
-                    Description = description,
-                    Source = "NVD",
-                    SeverityScore = cvssScore,
-                    DateDiscovered = cve.Published != null ? DateTime.Parse(cve.Published) : DateTime.UtcNow,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
+                    PropertyNameCaseInsensitive = true
+                });
 
-                _context.Vulnerabilities.Add(vulnerability);
-                importedCount++;
+                if (nvdResponse?.Vulnerabilities == null || !nvdResponse.Vulnerabilities.Any())
+                {
+                    _logger.LogInformation("No more vulnerabilities found in NVD response");
+                    break;
+                }
+
+                var pageImported = 0;
+                foreach (var item in nvdResponse.Vulnerabilities)
+                {
+                    var cve = item.Cve;
+                    if (cve == null) continue;
+
+                    // Check if already exists
+                    var exists = await _context.Vulnerabilities
+                        .AnyAsync(v => v.CveId == cve.Id);
+
+                    if (exists) continue;
+
+                    // Extract description
+                    var description = cve.Descriptions?
+                        .FirstOrDefault(d => d.Lang == "en")?.Value ?? "No description available";
+
+                    // Check if bio-related
+                    var isBioRelated = _bioKeywords.Any(keyword =>
+                        description.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                        (cve.Id != null && cve.Id.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
+
+                    // Only import bio-related or if keyword filter is specified
+                    if (!isBioRelated && string.IsNullOrEmpty(keywordFilter))
+                    {
+                        continue;
+                    }
+
+                    // Extract CVSS score if available
+                    decimal? cvssScore = null;
+                    if (cve.Metrics?.CvssMetricV31 != null && cve.Metrics.CvssMetricV31.Any())
+                    {
+                        var metric = cve.Metrics.CvssMetricV31[0];
+                        if (metric?.CvssData != null)
+                        {
+                            cvssScore = (decimal)metric.CvssData.BaseScore;
+                        }
+                    }
+                    else if (cve.Metrics?.CvssMetricV30 != null && cve.Metrics.CvssMetricV30.Any())
+                    {
+                        var metric = cve.Metrics.CvssMetricV30[0];
+                        if (metric?.CvssData != null)
+                        {
+                            cvssScore = (decimal)metric.CvssData.BaseScore;
+                        }
+                    }
+                    else if (cve.Metrics?.CvssMetricV2 != null && cve.Metrics.CvssMetricV2.Any())
+                    {
+                        var metric = cve.Metrics.CvssMetricV2[0];
+                        if (metric?.CvssData != null)
+                        {
+                            cvssScore = (decimal)metric.CvssData.BaseScore;
+                        }
+                    }
+
+                    var vulnerability = new Vulnerability
+                    {
+                        CveId = cve.Id ?? "UNKNOWN",
+                        Description = description,
+                        Source = "NVD",
+                        SeverityScore = cvssScore,
+                        DateDiscovered = cve.Published != null ? DateTime.Parse(cve.Published) : DateTime.UtcNow,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Vulnerabilities.Add(vulnerability);
+                    importedCount++;
+                    pageImported++;
+                }
+
+                await _context.SaveChangesAsync();
+                totalFetched += nvdResponse.Vulnerabilities.Count;
+                startIndex += currentPageSize;
+
+                _logger.LogInformation($"Imported {pageImported} vulnerabilities from this page (total: {importedCount})");
+
+                // If we got fewer results than requested, we've reached the end
+                if (nvdResponse.Vulnerabilities.Count < currentPageSize)
+                {
+                    break;
+                }
+
+                // Rate limiting: wait a bit between requests
+                if (totalFetched < maxResults)
+                {
+                    await Task.Delay(1000); // 1 second delay between API calls
+                }
             }
 
-            await _context.SaveChangesAsync();
-            _logger.LogInformation($"Imported {importedCount} vulnerabilities from NVD");
+            _logger.LogInformation($"Total imported: {importedCount} vulnerabilities from NVD");
 
             return importedCount;
         }
