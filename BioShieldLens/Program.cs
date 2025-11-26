@@ -7,6 +7,23 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllersWithViews();
 
+// Add Swagger for API documentation
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "BioShield Lens API",
+        Version = "v1",
+        Description = "API for managing biological system vulnerability analysis",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "BioISAC",
+            Url = new Uri("https://www.bioisac.com")
+        }
+    });
+});
+
 // Configure MySQL connection
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrEmpty(connectionString))
@@ -50,6 +67,7 @@ builder.Services.AddScoped<INvdDataService, NvdDataService>();
 builder.Services.AddScoped<IAiClassificationService, AiClassificationService>();
 builder.Services.AddScoped<IVulnerabilityService, VulnerabilityService>();
 builder.Services.AddScoped<ITrendService, TrendService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 // Add HttpClient for API calls
 builder.Services.AddHttpClient();
@@ -60,7 +78,16 @@ builder.Services.AddHostedService<BackgroundDataService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BioShield Lens API v1");
+        c.RoutePrefix = "api/docs"; // Access at /api/docs
+    });
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
@@ -77,13 +104,59 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Ensure database is created (with error handling)
+// Ensure database is created and schema is updated (with error handling)
 try
 {
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<BioShieldDbContext>();
         db.Database.EnsureCreated();
+        
+        // Add missing columns to Vulnerabilities table (one at a time)
+        var columnsToAdd = new[]
+        {
+            ("Status", "ALTER TABLE Vulnerabilities ADD COLUMN Status VARCHAR(50) NOT NULL DEFAULT 'New'"),
+            ("AssignedTo", "ALTER TABLE Vulnerabilities ADD COLUMN AssignedTo VARCHAR(100) NULL"),
+            ("ResolutionNotes", "ALTER TABLE Vulnerabilities ADD COLUMN ResolutionNotes TEXT NULL"),
+            ("ResolvedAt", "ALTER TABLE Vulnerabilities ADD COLUMN ResolvedAt DATETIME NULL")
+        };
+        
+        foreach (var (columnName, sql) in columnsToAdd)
+        {
+            try
+            {
+                db.Database.ExecuteSqlRaw(sql);
+                Console.WriteLine($"Added {columnName} column to Vulnerabilities table.");
+            }
+            catch (Exception)
+            {
+                // Column might already exist, silently continue
+            }
+        }
+        
+        // Create AuditLogs table if it doesn't exist
+        try
+        {
+            db.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS AuditLogs (
+                    Id INT NOT NULL AUTO_INCREMENT,
+                    Action VARCHAR(100) NOT NULL,
+                    EntityType VARCHAR(255) NULL,
+                    EntityId INT NULL,
+                    Details TEXT NULL,
+                    PerformedBy VARCHAR(255) NULL,
+                    IpAddress VARCHAR(50) NULL,
+                    Timestamp DATETIME(6) NOT NULL,
+                    PRIMARY KEY (Id)
+                ) CHARACTER SET=utf8mb4;
+            ");
+            Console.WriteLine("Created AuditLogs table.");
+        }
+        catch (Exception)
+        {
+            // Table might already exist, ignore
+        }
+        
         Console.WriteLine("Database connection successful and tables created/verified.");
     }
 }

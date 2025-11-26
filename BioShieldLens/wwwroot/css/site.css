@@ -15,7 +15,7 @@
   --color-warning: #FF9500;
   --color-info: #5AC8FA;
   
-  /* Neutral Colors - Pure Apple Style */
+  /* Neutral Colors - Pure Apple Style (Light Mode) */
   --color-bg: #FFFFFF;
   --color-bg-secondary: #F5F5F7;
   --color-bg-tertiary: #FBFBFD;
@@ -39,6 +39,106 @@
   --radius-xl: 22px;
 }
 
+/* Dark Mode Colors */
+[data-theme="dark"] {
+  --color-bg: #000000;
+  --color-bg-secondary: #1C1C1E;
+  --color-bg-tertiary: #2C2C2E;
+  --color-bg-elevated: #1C1C1E;
+  --color-text: #FFFFFF;
+  --color-text-secondary: #98989D;
+  --color-text-tertiary: #8E8E93;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-divider: rgba(255, 255, 255, 0.15);
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .hero-section {
+  background: linear-gradient(180deg, #000000 0%, #1C1C1E 100%);
+}
+
+[data-theme="dark"] .welcome-card {
+  background: linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%);
+}
+
+[data-theme="dark"] .navbar {
+  background: rgba(28, 28, 30, 0.72) !important;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .card:not(.bg-danger):not(.bg-warning):not(.bg-info) {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .table {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .table tbody tr {
+  border-bottom: 0.5px solid var(--color-border);
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .form-control {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .form-control:focus {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .alert-info {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+/* Dark mode: Keep colored stat cards with bright backgrounds and white text */
+[data-theme="dark"] .card.bg-danger,
+body[data-theme="dark"] .card.bg-danger {
+  background: #FF3B30 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .card.bg-danger *,
+body[data-theme="dark"] .card.bg-danger * {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .card.bg-warning,
+body[data-theme="dark"] .card.bg-warning {
+  background: #FF9500 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .card.bg-warning *,
+body[data-theme="dark"] .card.bg-warning * {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .card.bg-info,
+body[data-theme="dark"] .card.bg-info {
+  background: #5AC8FA !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .card.bg-info *,
+body[data-theme="dark"] .card.bg-info * {
+  color: #FFFFFF !important;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -55,8 +155,19 @@ body {
   background-color: var(--color-bg-secondary);
   color: var(--color-text);
   line-height: 1.6;
+  font-size: 17px;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure dark mode applies to body */
+[data-theme="dark"] body,
+body[data-theme="dark"] {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
 }
 
 /* Typography Hierarchy - Pure Apple */
@@ -229,14 +340,29 @@ main {
 /* Apple-inspired stat card colors - Solid */
 .card.bg-danger {
   background: #FF3B30 !important;
+  color: white !important;
+}
+
+.card.bg-danger * {
+  color: white !important;
 }
 
 .card.bg-warning {
   background: #FF9500 !important;
+  color: white !important;
+}
+
+.card.bg-warning * {
+  color: white !important;
 }
 
 .card.bg-info {
   background: #5AC8FA !important;
+  color: white !important;
+}
+
+.card.bg-info * {
+  color: white !important;
 }
 
 .card.bg-secondary {
@@ -462,10 +588,10 @@ main {
 
 .form-label {
   font-weight: 600;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.008em;
+  margin-bottom: 0.625rem;
+  letter-spacing: -0.010em;
 }
 
 .input-group .btn {
@@ -487,8 +613,9 @@ main {
 
 .table {
   margin-bottom: 0;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 400;
+  line-height: 1.5;
 }
 
 .table thead {
@@ -607,11 +734,12 @@ main {
 footer {
   background: var(--color-bg);
   border-top: 0.5px solid var(--color-border);
-  padding: 2.5rem 0;
-  margin-top: 5rem;
+  padding: 3rem 0;
+  margin-top: 6rem;
   color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 400;
+  letter-spacing: -0.008em;
 }
 
 /* Smooth Animations */
@@ -624,6 +752,20 @@ footer {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  display: inline-block;
 }
 
 .card, .alert {
@@ -667,19 +809,36 @@ canvas {
 /* Hero Section Styling */
 .hero-section {
   text-align: center;
-  padding: 4rem 2rem 3rem;
-  background: var(--color-bg);
-  margin: -3rem 0 3rem;
+  padding: 5rem 2rem 4rem;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 100%);
+  margin: -3rem 0 0;
   border-bottom: 0.5px solid var(--color-border);
+  position: relative;
+}
+
+.hero-section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: var(--color-primary);
+  border-radius: 2px;
 }
 
 .hero-section h1 {
-  font-size: 3.5rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
   color: var(--color-text);
-  letter-spacing: -0.022em;
+  letter-spacing: -0.032em;
   line-height: 1.05;
+  background: linear-gradient(135deg, #1D1D1F 0%, #4A4A4F 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .hero-section .lead {
@@ -690,6 +849,360 @@ canvas {
   font-weight: 400;
   letter-spacing: -0.012em;
   line-height: 1.47059;
+}
+
+/* Auto-Refresh Status Bar */
+.refresh-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-tertiary) 100%);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.refresh-status-bar:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.refresh-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.refresh-info i {
+  font-size: 1.125rem;
+  color: var(--color-primary);
+}
+
+.refresh-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#refreshCountdown {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+#refreshCountdown strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet and Mobile */
+@media (max-width: 768px) {
+  .refresh-status-bar {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .refresh-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .refresh-controls button {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .hero-section h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero-section .lead {
+    font-size: 1.125rem;
+  }
+  
+  .container-fluid {
+    padding: 0 1rem;
+  }
+  
+  main {
+    padding: 1.5rem 0;
+  }
+  
+  /* Make stat cards stack on mobile */
+  .stat-card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Improve table scrolling on mobile */
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-sm);
+  }
+  
+  .table {
+    font-size: 0.8125rem;
+    min-width: 800px;
+  }
+  
+  .table td, .table th {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .table .description-cell {
+    max-width: 200px;
+    white-space: normal;
+    font-size: 0.75rem;
+  }
+  
+  .table .mobile-cve {
+    font-size: 0.75rem;
+  }
+  
+  .table .sector-cell,
+  .table .date-cell {
+    font-size: 0.75rem;
+  }
+  
+  /* Stack buttons on mobile */
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-group .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Adjust card spacing */
+  .card {
+    margin-bottom: 1.5rem;
+  }
+  
+  .card-body {
+    padding: 1.25rem;
+  }
+  
+  /* Export buttons stack on mobile */
+  .export-btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .d-flex.flex-wrap {
+    justify-content: center !important;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 3rem 1rem 2.5rem;
+  }
+  
+  .hero-section h1 {
+    font-size: 2rem;
+  }
+  
+  .hero-section .lead {
+    font-size: 1rem;
+  }
+  
+  .welcome-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .welcome-card h2 {
+    font-size: 1.5rem;
+  }
+  
+  .welcome-card .intro-text {
+    font-size: 0.9375rem;
+  }
+  
+  .stat-number {
+    font-size: 2rem !important;
+  }
+  
+  .navbar-brand {
+    font-size: 1.125rem;
+  }
+  
+  .btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .form-control {
+    font-size: 1rem; /* Prevent zoom on iOS */
+  }
+  
+  footer {
+    font-size: 0.75rem;
+    padding: 2rem 0;
+  }
+}
+
+/* iPad and tablets (portrait) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container-fluid {
+    padding: 0 1.5rem;
+  }
+  
+  .hero-section h1 {
+    font-size: 3rem;
+  }
+  
+  .table {
+    font-size: 0.875rem;
+  }
+}
+
+/* Large desktop screens */
+@media (min-width: 1400px) {
+  .container-fluid {
+    max-width: 1600px;
+  }
+  
+  .hero-section h1 {
+    font-size: 4.5rem;
+  }
+  
+  .hero-section .lead {
+    font-size: 1.5rem;
+  }
+}
+
+/* Welcome Card - Pure Apple Style */
+.welcome-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F5F5F7 100%);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2.5rem;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+}
+
+.welcome-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.welcome-card h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.welcome-card .intro-text {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin-bottom: 2.5rem;
+  max-width: 900px;
+}
+
+.welcome-card .quick-start {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  border: 0.5px solid var(--color-border);
+}
+
+.welcome-card .quick-start h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.020em;
+  margin-bottom: 1.5rem;
+  color: var(--color-text);
+}
+
+.welcome-card .steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.welcome-card .step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  transition: all 0.3s ease;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+}
+
+.welcome-card .step:hover {
+  background: var(--color-bg-secondary);
+  transform: translateX(4px);
+}
+
+.welcome-card .step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+}
+
+.welcome-card .step-content {
+  flex: 1;
+}
+
+.welcome-card .step-content strong {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.018em;
+}
+
+.welcome-card .step-content p {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive Welcome Card */
+@media (max-width: 768px) {
+  .welcome-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .welcome-card h2 {
+    font-size: 1.5rem;
+  }
+  
+  .welcome-card .intro-text {
+    font-size: 1rem;
+  }
+  
+  .welcome-card .quick-start {
+    padding: 1.5rem;
+  }
+  
+  .welcome-card .step {
+    padding: 0.75rem;
+  }
 }
 
 /* Stat card improvements */
