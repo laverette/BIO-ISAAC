@@ -26,8 +26,10 @@ public class TrendService : ITrendService
 
     public async Task CalculateTrendsAsync()
     {
-        var currentMonth = DateTime.UtcNow.ToString("yyyy-MM");
-        var lastMonth = DateTime.UtcNow.AddMonths(-1).ToString("yyyy-MM");
+        var now = DateTime.UtcNow;
+        var currentMonth = now.ToString("yyyy-MM");
+        var lastMonthDate = now.AddMonths(-1);
+        var lastMonth = lastMonthDate.ToString("yyyy-MM");
 
         // Calculate trends by sector
         var sectors = await _context.Vulnerabilities
@@ -41,12 +43,14 @@ public class TrendService : ITrendService
             var currentCount = await _context.Vulnerabilities
                 .CountAsync(v => v.AffectedSector == sector && 
                                 v.DateDiscovered != null &&
-                                v.DateDiscovered.Value.ToString("yyyy-MM") == currentMonth);
+                                v.DateDiscovered.Value.Year == now.Year &&
+                                v.DateDiscovered.Value.Month == now.Month);
 
             var lastCount = await _context.Vulnerabilities
                 .CountAsync(v => v.AffectedSector == sector && 
                                 v.DateDiscovered != null &&
-                                v.DateDiscovered.Value.ToString("yyyy-MM") == lastMonth);
+                                v.DateDiscovered.Value.Year == lastMonthDate.Year &&
+                                v.DateDiscovered.Value.Month == lastMonthDate.Month);
 
             decimal? changePercentage = null;
             if (lastCount > 0)

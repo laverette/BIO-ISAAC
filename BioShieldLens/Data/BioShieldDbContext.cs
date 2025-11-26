@@ -12,6 +12,7 @@ public class BioShieldDbContext : DbContext
 
     public DbSet<Vulnerability> Vulnerabilities { get; set; }
     public DbSet<Trend> Trends { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,6 +23,7 @@ public class BioShieldDbContext : DbContext
             entity.HasIndex(e => e.CveId).IsUnique();
             entity.HasIndex(e => e.UrgencyLevel);
             entity.HasIndex(e => e.DateDiscovered);
+            entity.HasIndex(e => e.Status);
         });
 
         modelBuilder.Entity<Trend>(entity =>

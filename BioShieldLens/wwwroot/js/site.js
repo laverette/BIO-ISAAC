@@ -1,8 +1,183 @@
 // BioShield Lens - Modern UI Interactions
 console.log('🛡️ BioShield Lens loaded');
 
+// Dark Mode Toggle
+function initDarkMode() {
+    console.log('🌙 Initializing dark mode...');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeIcon = document.getElementById('darkModeIcon');
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+    
+    console.log('Dark mode button found:', darkModeToggle !== null);
+    console.log('Dark mode icon found:', darkModeIcon !== null);
+    
+    // Check for saved theme preference or default to light mode
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    console.log('Saved theme:', savedTheme);
+    applyTheme(savedTheme);
+    updateDarkModeIcon(savedTheme);
+    
+    if (darkModeToggle) {
+        // Remove any existing listeners
+        const newButton = darkModeToggle.cloneNode(true);
+        darkModeToggle.parentNode.replaceChild(newButton, darkModeToggle);
+        
+        newButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🌙 Dark mode button clicked!');
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            console.log('Switching from', currentTheme, 'to', newTheme);
+            
+            applyTheme(newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateDarkModeIcon(newTheme);
+            
+            // Add smooth transition
+            if (bodyElement) {
+                bodyElement.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+                setTimeout(() => {
+                    bodyElement.style.transition = '';
+                }, 300);
+            }
+        });
+        console.log('✅ Dark mode event listener attached');
+    } else {
+        console.error('❌ Dark mode button not found!');
+    }
+    
+    function applyTheme(theme) {
+        console.log('Applying theme:', theme);
+        htmlElement.setAttribute('data-theme', theme);
+        if (bodyElement) {
+            bodyElement.setAttribute('data-theme', theme);
+        }
+        console.log('Theme applied. HTML data-theme:', htmlElement.getAttribute('data-theme'));
+    }
+    
+    function updateDarkModeIcon(theme) {
+        const icon = document.getElementById('darkModeIcon');
+        if (icon) {
+            if (theme === 'dark') {
+                icon.classList.remove('bi-moon-fill');
+                icon.classList.add('bi-sun-fill');
+                console.log('Icon changed to sun');
+            } else {
+                icon.classList.remove('bi-sun-fill');
+                icon.classList.add('bi-moon-fill');
+                console.log('Icon changed to moon');
+            }
+        }
+    }
+}
+
+// Auto-Refresh Functionality
+let autoRefreshInterval;
+let countdownInterval;
+let refreshEnabled = true;
+let secondsRemaining = 300; // 5 minutes default
+
+function initAutoRefresh() {
+    const refreshNowBtn = document.getElementById('refreshNowBtn');
+    const toggleAutoRefresh = document.getElementById('toggleAutoRefresh');
+    const refreshCountdown = document.getElementById('refreshCountdown');
+    const lastUpdated = document.getElementById('lastUpdated');
+    const autoRefreshText = document.getElementById('autoRefreshText');
+    
+    if (!refreshNowBtn) return; // Exit if not on dashboard
+    
+    // Update last updated time
+    updateLastUpdatedTime();
+    
+    // Start countdown
+    startCountdown();
+    
+    // Refresh now button
+    refreshNowBtn.addEventListener('click', function() {
+        refreshPage();
+    });
+    
+    // Toggle auto-refresh
+    toggleAutoRefresh.addEventListener('click', function() {
+        refreshEnabled = !refreshEnabled;
+        
+        if (refreshEnabled) {
+            autoRefreshText.textContent = 'Pause';
+            toggleAutoRefresh.querySelector('i').classList.remove('bi-play-fill');
+            toggleAutoRefresh.querySelector('i').classList.add('bi-pause-fill');
+            startCountdown();
+        } else {
+            autoRefreshText.textContent = 'Resume';
+            toggleAutoRefresh.querySelector('i').classList.remove('bi-pause-fill');
+            toggleAutoRefresh.querySelector('i').classList.add('bi-play-fill');
+            stopCountdown();
+        }
+    });
+    
+    function updateLastUpdatedTime() {
+        if (lastUpdated) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            lastUpdated.innerHTML = `Last updated: <strong>${timeString}</strong>`;
+        }
+    }
+    
+    function startCountdown() {
+        if (!refreshEnabled) return;
+        
+        secondsRemaining = 300; // Reset to 5 minutes
+        updateCountdownDisplay();
+        
+        countdownInterval = setInterval(() => {
+            secondsRemaining--;
+            updateCountdownDisplay();
+            
+            if (secondsRemaining <= 0) {
+                refreshPage();
+            }
+        }, 1000);
+    }
+    
+    function stopCountdown() {
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+    }
+    
+    function updateCountdownDisplay() {
+        if (refreshCountdown) {
+            const minutes = Math.floor(secondsRemaining / 60);
+            const seconds = secondsRemaining % 60;
+            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            refreshCountdown.innerHTML = `Auto-refresh in: <strong>${timeString}</strong>`;
+        }
+    }
+    
+    function refreshPage() {
+        // Show loading state
+        if (refreshNowBtn) {
+            refreshNowBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Refreshing...';
+            refreshNowBtn.disabled = true;
+        }
+        
+        // Reload page
+        window.location.reload();
+    }
+}
+
 // Smooth scroll behavior
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM Content Loaded');
+    // Re-initialize dark mode to ensure event listeners are attached
+    initDarkMode();
+    
+    // Initialize auto-refresh
+    initAutoRefresh();
     // Add smooth fade-in animation on page load
     const cards = document.querySelectorAll('.card');
     cards.forEach((card, index) => {
