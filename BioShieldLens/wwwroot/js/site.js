@@ -13,7 +13,12 @@ function initDarkMode() {
     console.log('Dark mode icon found:', darkModeIcon !== null);
     
     // Check for saved theme preference or default to light mode
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    // If no preference is saved, default to light mode
+    let savedTheme = localStorage.getItem('theme');
+    if (!savedTheme) {
+        savedTheme = 'light';
+        localStorage.setItem('theme', 'light');
+    }
     console.log('Saved theme:', savedTheme);
     applyTheme(savedTheme);
     updateDarkModeIcon(savedTheme);
@@ -58,15 +63,21 @@ function initDarkMode() {
     
     function updateDarkModeIcon(theme) {
         const icon = document.getElementById('darkModeIcon');
+        const button = document.getElementById('darkModeToggle');
         if (icon) {
+            // Icon represents what you'll switch TO: moon when in light (switch to dark), sun when in dark (switch to light)
             if (theme === 'dark') {
+                // Currently dark, show sun icon (click to switch to light)
                 icon.classList.remove('bi-moon-fill');
                 icon.classList.add('bi-sun-fill');
-                console.log('Icon changed to sun');
+                if (button) button.setAttribute('title', 'Switch to Light Mode');
+                console.log('Icon changed to sun (currently dark, click to go light)');
             } else {
+                // Currently light, show moon icon (click to switch to dark)
                 icon.classList.remove('bi-sun-fill');
                 icon.classList.add('bi-moon-fill');
-                console.log('Icon changed to moon');
+                if (button) button.setAttribute('title', 'Switch to Dark Mode');
+                console.log('Icon changed to moon (currently light, click to go dark)');
             }
         }
     }
