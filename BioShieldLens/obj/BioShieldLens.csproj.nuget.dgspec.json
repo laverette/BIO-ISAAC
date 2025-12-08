@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\BioShieldLens.csproj": {}
+    "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\GP3\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj": {}
   },
   "projects": {
-    "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\BioShieldLens.csproj": {
+    "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\GP3\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\BioShieldLens.csproj",
+        "projectUniqueName": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\GP3\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj",
         "projectName": "BioShieldLens",
-        "projectPath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\BioShieldLens.csproj",
+        "projectPath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\GP3\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj",
         "packagesPath": "C:\\Users\\logan\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-ISAC\\BioShieldLens\\obj\\",
+        "outputPath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\GP3\\BIO-ISAAC\\BioShieldLens\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\logan\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -37,7 +37,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -51,7 +52,7 @@
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[8.0.11, )"
             },
             "OpenAI": {
               "target": "Package",
@@ -59,11 +60,15 @@
             },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[8.0.2, )"
             },
             "QuestPDF": {
               "target": "Package",
               "version": "[2025.7.4, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.5.0, )"
             }
           },
           "imports": [
@@ -77,6 +82,24 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.22, 8.0.22]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.win-x64",
+              "version": "[8.0.22, 8.0.22]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.22, 8.0.22]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[8.0.22, 8.0.22]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -85,7 +108,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.405/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

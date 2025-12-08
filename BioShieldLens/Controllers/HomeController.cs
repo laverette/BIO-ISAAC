@@ -30,14 +30,26 @@ public class HomeController : Controller
             var critical = await _vulnerabilityService.GetVulnerabilitiesByPriorityAsync("Critical to Act Now");
             var monitor = await _vulnerabilityService.GetVulnerabilitiesByPriorityAsync("Monitor");
             var lowPriority = await _vulnerabilityService.GetVulnerabilitiesByPriorityAsync("Low Priority");
+            var allVulnerabilities = await _vulnerabilityService.GetAllVulnerabilitiesAsync();
             var stats = await _vulnerabilityService.GetVulnerabilityStatsAsync();
             var trends = await _trendService.GetTrendsAsync();
+            
+            // Calculate sector distribution for the chart
+            var sectorDistribution = allVulnerabilities
+                .Where(v => !string.IsNullOrEmpty(v.AffectedSector))
+                .GroupBy(v => v.AffectedSector!)
+                .Select(g => new { Sector = g.Key ?? "Unknown", Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToList();
 
             ViewBag.Critical = critical;
             ViewBag.Monitor = monitor;
             ViewBag.LowPriority = lowPriority;
+            ViewBag.AllVulnerabilities = allVulnerabilities;
             ViewBag.Stats = stats;
             ViewBag.Trends = trends;
+            ViewBag.SectorDistribution = sectorDistribution;
 
             // Generate intel notes for critical vulnerabilities
             if (critical.Any())
@@ -52,8 +64,10 @@ public class HomeController : Controller
             ViewBag.Critical = new List<Vulnerability>();
             ViewBag.Monitor = new List<Vulnerability>();
             ViewBag.LowPriority = new List<Vulnerability>();
+            ViewBag.AllVulnerabilities = new List<Vulnerability>();
             ViewBag.Stats = new Dictionary<string, int> { { "Total", 0 }, { "Critical to Act Now", 0 }, { "Monitor", 0 }, { "Low Priority", 0 } };
             ViewBag.Trends = new List<Trend>();
+            ViewBag.SectorDistribution = new List<object>();
             ViewBag.IntelNotes = "Unable to load data. Please check database connection.";
             TempData["Error"] = "Database connection failed. The page will show empty data. Please check your connection string.";
         }

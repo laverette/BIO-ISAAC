@@ -3,8 +3,10 @@
     var critical = ViewBag.Critical as List<Vulnerability> ?? new List<Vulnerability>();
     var monitor = ViewBag.Monitor as List<Vulnerability> ?? new List<Vulnerability>();
     var lowPriority = ViewBag.LowPriority as List<Vulnerability> ?? new List<Vulnerability>();
+    var allVulnerabilities = ViewBag.AllVulnerabilities as List<Vulnerability> ?? new List<Vulnerability>();
     var stats = ViewBag.Stats as Dictionary<string, int> ?? new Dictionary<string, int>();
     var trends = ViewBag.Trends as List<Trend> ?? new List<Trend>();
+    // Sector distribution will be serialized directly in the script
     var intelNotes = ViewBag.IntelNotes as string;
 }
 
@@ -167,8 +169,12 @@
             <div class="card-header">
                 <h5><i class="bi bi-graph-up"></i> Vulnerability Discovery Timeline</h5>
             </div>
-            <div class="card-body" style="min-height: 300px;">
+            <div class="card-body" style="min-height: 300px; position: relative;">
                 <canvas id="timelineChart"></canvas>
+                <div id="timelineNoData" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--color-text-secondary);">
+                    <i class="bi bi-info-circle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>No vulnerability data available for timeline</p>
+                </div>
             </div>
         </div>
     </div>
@@ -338,14 +344,96 @@
 
 @section Scripts {
     <script>
+        // Chart instances storage
+        let timelineChart = null;
+        let vulnChart = null;
+        let trendsChart = null;
+        
+        // Function to get theme colors
+        function getThemeColors() {
+            const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+            return {
+                isDark: isDarkMode,
+                text: isDarkMode ? '#FFFFFF' : '#1D1D1F',
+                grid: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                tooltipBg: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)',
+                tooltipText: isDarkMode ? '#000000' : '#FFFFFF'
+            };
+        }
+        
+        // Function to update chart colors
+        function updateChartColors() {
+            const colors = getThemeColors();
+            
+            // Update timeline chart
+            if (timelineChart) {
+                timelineChart.options.plugins.legend.labels.color = colors.text;
+                timelineChart.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+                timelineChart.options.plugins.tooltip.titleColor = colors.tooltipText;
+                timelineChart.options.plugins.tooltip.bodyColor = colors.tooltipText;
+                timelineChart.options.scales.y.ticks.color = colors.text;
+                timelineChart.options.scales.y.grid.color = colors.grid;
+                timelineChart.options.scales.x.ticks.color = colors.text;
+                timelineChart.options.scales.x.grid.color = colors.grid;
+                timelineChart.update();
+            }
+            
+            // Update vulnerability distribution chart
+            if (vulnChart) {
+                vulnChart.options.plugins.legend.labels.color = colors.text;
+                vulnChart.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+                vulnChart.options.plugins.tooltip.titleColor = colors.tooltipText;
+                vulnChart.options.plugins.tooltip.bodyColor = colors.tooltipText;
+                vulnChart.update();
+            }
+            
+            // Update trends chart
+            if (trendsChart) {
+                trendsChart.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+                trendsChart.options.plugins.tooltip.titleColor = colors.tooltipText;
+                trendsChart.options.plugins.tooltip.bodyColor = colors.tooltipText;
+                trendsChart.options.scales.y.ticks.color = colors.text;
+                trendsChart.options.scales.y.grid.color = colors.grid;
+                trendsChart.options.scales.x.ticks.color = colors.text;
+                trendsChart.options.scales.x.grid.color = colors.grid;
+                trendsChart.update();
+            }
+        }
+        
+        // Listen for theme changes via MutationObserver
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                    updateChartColors();
+                }
+            });
+        });
+        observer.observe(document.documentElement, { attributes: true });
+        
+        // Also listen for dark mode button clicks (for immediate update)
+        const darkModeButton = document.getElementById('darkModeToggle');
+        if (darkModeButton) {
+            darkModeButton.addEventListener('click', function() {
+                // Small delay to ensure theme attribute is updated first
+                setTimeout(updateChartColors, 100);
+            });
+        }
+        
         // Vulnerability Timeline Chart
         const timelineCtx = document.getElementById('timelineChart').getContext('2d');
         
         // Prepare timeline data - group by date
-        const allVulns = [...@Html.Raw(Json.Serialize(critical.Concat(monitor).Concat(lowPriority).Select(v => new { 
-            Date = v.DateDiscovered, 
-            Urgency = v.UrgencyLevel 
-        })))];
+        // Use all vulnerabilities, prefer DateDiscovered, fallback to CreatedAt
+        const allVulns = @Html.Raw(Json.Serialize(allVulnerabilities
+            .Where(v => v.DateDiscovered.HasValue || v.CreatedAt != default(DateTime))
+            .Select(v => new { 
+                Date = (v.DateDiscovered ?? v.CreatedAt).ToString("yyyy-MM-dd"), 
+                Urgency = v.UrgencyLevel ?? "Unknown"
+            })));
+        
+        console.log('Total vulnerabilities:', @allVulnerabilities.Count);
+        console.log('Timeline data array:', allVulns);
+        console.log('Is array?', Array.isArray(allVulns));
         
         // Group by date and count
         const dateGroups = {};
@@ -353,91 +441,130 @@
         const monitorByDate = {};
         const lowByDate = {};
         
-        allVulns.forEach(v => {
-            if (!v.Date) return;
-            const date = v.Date.split('T')[0];
-            dateGroups[date] = (dateGroups[date] || 0) + 1;
-            
-            if (v.Urgency === 'Critical to Act Now') {
-                criticalByDate[date] = (criticalByDate[date] || 0) + 1;
-            } else if (v.Urgency === 'Monitor') {
-                monitorByDate[date] = (monitorByDate[date] || 0) + 1;
-            } else {
-                lowByDate[date] = (lowByDate[date] || 0) + 1;
-            }
-        });
+        if (Array.isArray(allVulns) && allVulns.length > 0) {
+            allVulns.forEach(v => {
+                // JSON serialization uses camelCase, so property is 'date' not 'Date'
+                const date = v.date || v.Date;
+                const urgency = v.urgency || v.Urgency;
+                
+                if (!v || !date) {
+                    console.log('Skipping invalid entry:', v);
+                    return;
+                }
+                
+                dateGroups[date] = (dateGroups[date] || 0) + 1;
+                
+                if (urgency === 'Critical to Act Now') {
+                    criticalByDate[date] = (criticalByDate[date] || 0) + 1;
+                } else if (urgency === 'Monitor') {
+                    monitorByDate[date] = (monitorByDate[date] || 0) + 1;
+                } else {
+                    lowByDate[date] = (lowByDate[date] || 0) + 1;
+                }
+            });
+        } else {
+            console.log('No vulnerabilities found or data is not an array');
+        }
         
         const sortedDates = Object.keys(dateGroups).sort();
+        console.log('Date groups:', dateGroups);
+        console.log('Sorted dates:', sortedDates);
+        console.log('Critical by date:', criticalByDate);
+        console.log('Monitor by date:', monitorByDate);
+        console.log('Low by date:', lowByDate);
         
-        new Chart(timelineCtx, {
-            type: 'line',
-            data: {
-                labels: sortedDates,
-                datasets: [
-                    {
-                        label: 'Critical',
-                        data: sortedDates.map(d => criticalByDate[d] || 0),
-                        borderColor: '#FF3B30',
-                        backgroundColor: 'rgba(255, 59, 48, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'Monitor',
-                        data: sortedDates.map(d => monitorByDate[d] || 0),
-                        borderColor: '#FF9500',
-                        backgroundColor: 'rgba(255, 149, 0, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'Low Priority',
-                        data: sortedDates.map(d => lowByDate[d] || 0),
-                        borderColor: '#5AC8FA',
-                        backgroundColor: 'rgba(90, 200, 250, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
+        // Only create chart if we have data
+        if (sortedDates.length > 0) {
+            const colors = getThemeColors();
+            timelineChart = new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [
+                        {
+                            label: 'Critical',
+                            data: sortedDates.map(d => criticalByDate[d] || 0),
+                            borderColor: '#FF3B30',
+                            backgroundColor: 'rgba(255, 59, 48, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Monitor',
+                            data: sortedDates.map(d => monitorByDate[d] || 0),
+                            borderColor: '#FF9500',
+                            backgroundColor: 'rgba(255, 149, 0, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Low Priority',
+                            data: sortedDates.map(d => lowByDate[d] || 0),
+                            borderColor: '#5AC8FA',
+                            backgroundColor: 'rgba(90, 200, 250, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
                 },
-                plugins: {
-                    legend: {
-                        position: 'top',
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
                     },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12,
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 13 }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: colors.text
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 }
                         }
                     },
-                    x: {
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                stepSize: 1,
+                                color: colors.text
+                            },
+                            grid: {
+                                color: colors.grid
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                color: colors.text
+                            },
+                            grid: {
+                                color: colors.grid
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        } else {
+            // Show message if no data
+            document.getElementById('timelineChart').style.display = 'none';
+            document.getElementById('timelineNoData').style.display = 'block';
+        }
 
         // Vulnerability Distribution Chart
         const vulnCtx = document.getElementById('vulnerabilityChart').getContext('2d');
-        new Chart(vulnCtx, {
+        const colors2 = getThemeColors();
+        vulnChart = new Chart(vulnCtx, {
             type: 'doughnut',
             data: {
                 labels: ['Critical to Act Now', 'Monitor', 'Low Priority'],
@@ -456,40 +583,119 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
+                        labels: {
+                            color: colors2.text
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: colors2.tooltipBg,
+                        titleColor: colors2.tooltipText,
+                        bodyColor: colors2.tooltipText,
+                        padding: 12,
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 13 }
                     }
                 }
             }
         });
 
-        // Trends Chart
+        // Trends by Sector Chart - Show vulnerability counts by sector
         const trendsCtx = document.getElementById('trendsChart').getContext('2d');
-        const trends = @Html.Raw(Json.Serialize(trends.Take(10).Select(t => new { Category = t.Category, Change = t.ChangePercentage })));
         
-        new Chart(trendsCtx, {
-            type: 'bar',
-            data: {
-                labels: trends.map(t => t.Category),
-                datasets: [{
-                    label: 'Change %',
-                    data: trends.map(t => t.Change ?? 0),
-                    backgroundColor: trends.map(t => t.Change > 0 ? '#FF3B30' : '#34C759')
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        // Get sector data from server
+        const allVulnsForSector = @Html.Raw(Json.Serialize(allVulnerabilities
+            .Where(v => !string.IsNullOrEmpty(v.AffectedSector))
+            .Select(v => new { Sector = v.AffectedSector })));
+        
+        // Calculate sector distribution
+        const sectorCounts = {};
+        if (Array.isArray(allVulnsForSector)) {
+            allVulnsForSector.forEach(v => {
+                const sector = v.sector || v.Sector;
+                if (sector) {
+                    sectorCounts[sector] = (sectorCounts[sector] || 0) + 1;
+                }
+            });
+        }
+        
+        // Convert to arrays and sort by count (descending)
+        const sectors = Object.keys(sectorCounts);
+        const counts = sectors.map(s => sectorCounts[s]);
+        
+        // Sort by count (descending) and take top 10
+        const sortedPairs = sectors.map((s, i) => ({ sector: s, count: counts[i] }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10);
+        
+        const topSectors = sortedPairs.map(p => p.sector);
+        const topCounts = sortedPairs.map(p => p.count);
+        
+        console.log('Sector distribution:', sectorCounts);
+        console.log('Top sectors:', topSectors);
+        console.log('Top counts:', topCounts);
+        
+        if (topSectors.length > 0) {
+            const colors3 = getThemeColors();
+            trendsChart = new Chart(trendsCtx, {
+                type: 'bar',
+                data: {
+                    labels: topSectors,
+                    datasets: [{
+                        label: 'Vulnerabilities',
+                        data: topCounts,
+                        backgroundColor: '#007AFF',
+                        borderColor: '#0051D5',
+                        borderWidth: 1
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: colors3.tooltipBg,
+                            titleColor: colors3.tooltipText,
+                            bodyColor: colors3.tooltipText,
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                stepSize: 1,
+                                color: colors3.text
+                            },
+                            grid: {
+                                color: colors3.grid
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                color: colors3.text
+                            },
+                            grid: {
+                                color: colors3.grid
+                            }
+                        }
                     }
                 }
-            }
-        });
+            });
+        } else {
+            // Show message if no data
+            trendsCtx.fillStyle = '#666';
+            trendsCtx.font = '16px Arial';
+            trendsCtx.textAlign = 'center';
+            trendsCtx.fillText('No sector data available', trendsCtx.canvas.width / 2, trendsCtx.canvas.height / 2);
+        }
     </script>
 }
 
