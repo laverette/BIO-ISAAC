@@ -10,166 +10,100 @@
     var intelNotes = ViewBag.IntelNotes as string;
 }
 
+<!-- Welcome Back Header -->
 <div class="row">
-    <div class="col-12 hero-section">
-        <h1>BioShield Lens</h1>
-        <p class="lead">AI-Powered Biological System Vulnerability Analysis</p>
+    <div class="col-12">
+        <h4 class="text-muted mb-0">Welcome Back</h4>
     </div>
 </div>
 
-<!-- Auto-Refresh Status Bar -->
-<div class="row">
-    <div class="col-12">
-        <div class="refresh-status-bar">
-            <div class="refresh-info">
+<!-- Dashboard Header with Refresh -->
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-semibold">Vulnerability Overview</h5>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small" id="lastUpdated">Last updated: Just now</span>
+            <button id="refreshNowBtn" class="btn btn-sm btn-outline-secondary" title="Refresh">
                 <i class="bi bi-arrow-clockwise"></i>
-                <span id="lastUpdated">Last updated: Just now</span>
-            </div>
-            <div class="refresh-controls">
-                <span id="refreshCountdown" class="me-3">Auto-refresh in: <strong>5:00</strong></span>
-                <button id="refreshNowBtn" class="btn btn-sm btn-primary">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh Now
-                </button>
-                <button id="toggleAutoRefresh" class="btn btn-sm btn-outline-secondary ms-2">
-                    <i class="bi bi-pause-fill"></i> <span id="autoRefreshText">Pause</span>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Welcome Introduction -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="welcome-card">
-            <h2>Welcome to BioShield Lens</h2>
-            <p class="intro-text">
-                BioShield Lens helps you monitor and analyze cybersecurity vulnerabilities that could impact biological systems, 
-                healthcare infrastructure, and life sciences organizations. Our AI-powered platform automatically classifies 
-                vulnerabilities from the National Vulnerability Database (NVD) and prioritizes them based on their potential 
-                impact on biological and human systems.
-            </p>
-            <div class="quick-start">
-                <h3>Quick Start Guide</h3>
-                <div class="steps">
-                    <div class="step">
-                        <span class="step-number">1</span>
-                        <div class="step-content">
-                            <strong>Import Data</strong>
-                            <p>Scroll down to "Data Management" and click "Import from NVD API" to fetch real vulnerability data</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <span class="step-number">2</span>
-                        <div class="step-content">
-                            <strong>Review Dashboard</strong>
-                            <p>Check the statistics cards and charts to understand your vulnerability landscape</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <span class="step-number">3</span>
-                        <div class="step-content">
-                            <strong>Take Action</strong>
-                            <p>Click "View" on any vulnerability to see detailed analysis and AI-generated intelligence notes</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Export Buttons Row -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="d-flex justify-content-end gap-2 mb-3 flex-wrap">
-            <a href="/export/csv" class="btn btn-outline-success export-btn" title="Export all data to Excel/CSV">
-                <i class="bi bi-file-earmark-spreadsheet"></i> Export to Excel
+            </button>
+            <a href="/export/csv" class="btn btn-sm btn-outline-secondary" title="Export CSV">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
             </a>
-            <a href="/export/pdf" class="btn btn-outline-danger export-btn" title="Generate PDF Report">
-                <i class="bi bi-file-earmark-pdf"></i> Export to PDF
+            <a href="/export/pdf" class="btn btn-sm btn-outline-secondary" title="Export PDF">
+                <i class="bi bi-file-earmark-pdf"></i>
             </a>
         </div>
     </div>
 </div>
 
 <!-- Statistics Cards -->
-<div class="row mt-4">
-    <div class="col-md-3 col-sm-6 mb-4">
-        <div class="card text-white bg-danger stat-card">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <h5 class="card-title">Critical</h5>
+<div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #dc3545 !important;">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="text-muted mb-1 small text-uppercase fw-normal">Critical</h6>
+                        <h3 class="mb-0 fw-bold">@stats.GetValueOrDefault("Critical to Act Now", 0)</h3>
+                    </div>
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 1.5rem; opacity: 0.7;"></i>
                 </div>
-                <div class="stat-number">@stats.GetValueOrDefault("Critical to Act Now", 0)</div>
-                <p class="stat-description">Immediate action required</p>
+                <p class="text-muted small mb-0">Immediate action required</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6 mb-4">
-        <div class="card text-white bg-warning stat-card">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="bi bi-eye-fill"></i>
-                    <h5 class="card-title">Monitor</h5>
+    <div class="col-md-3 col-sm-6">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ffc107 !important;">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="text-muted mb-1 small text-uppercase fw-normal">Monitor</h6>
+                        <h3 class="mb-0 fw-bold">@stats.GetValueOrDefault("Monitor", 0)</h3>
+                    </div>
+                    <i class="bi bi-eye-fill text-warning" style="font-size: 1.5rem; opacity: 0.7;"></i>
                 </div>
-                <div class="stat-number">@stats.GetValueOrDefault("Monitor", 0)</div>
-                <p class="stat-description">Requires monitoring</p>
+                <p class="text-muted small mb-0">Requires monitoring</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6 mb-4">
-        <div class="card text-white bg-info stat-card">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="bi bi-info-circle-fill"></i>
-                    <h5 class="card-title">Low Priority</h5>
+    <div class="col-md-3 col-sm-6">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0dcaf0 !important;">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="text-muted mb-1 small text-uppercase fw-normal">Low Priority</h6>
+                        <h3 class="mb-0 fw-bold">@stats.GetValueOrDefault("Low Priority", 0)</h3>
+                    </div>
+                    <i class="bi bi-info-circle-fill text-info" style="font-size: 1.5rem; opacity: 0.7;"></i>
                 </div>
-                <div class="stat-number">@stats.GetValueOrDefault("Low Priority", 0)</div>
-                <p class="stat-description">Low impact items</p>
+                <p class="text-muted small mb-0">Low impact items</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6 mb-4">
-        <div class="card text-white bg-secondary stat-card">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="bi bi-list-check"></i>
-                    <h5 class="card-title">Total</h5>
+    <div class="col-md-3 col-sm-6">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #6c757d !important;">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="text-muted mb-1 small text-uppercase fw-normal">Total</h6>
+                        <h3 class="mb-0 fw-bold">@stats.GetValueOrDefault("Total", 0)</h3>
+                    </div>
+                    <i class="bi bi-list-check text-secondary" style="font-size: 1.5rem; opacity: 0.7;"></i>
                 </div>
-                <div class="stat-number">@stats.GetValueOrDefault("Total", 0)</div>
-                <p class="stat-description">All vulnerabilities</p>
+                <p class="text-muted small mb-0">All vulnerabilities</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Intel Notes -->
-@if (!string.IsNullOrEmpty(intelNotes))
-{
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h5><i class="bi bi-lightbulb"></i> Intelligence Summary</h5>
-                </div>
-                <div class="card-body">
-                    @Html.Raw(intelNotes)
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-<!-- Timeline Chart -->
-<div class="row mt-4">
+<!-- Charts Section -->
+<div class="row g-3 mb-3">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="bi bi-graph-up"></i> Vulnerability Discovery Timeline</h5>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-bottom py-2">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-graph-up me-2"></i>Vulnerability Discovery Timeline</h6>
             </div>
-            <div class="card-body" style="min-height: 300px; position: relative;">
+            <div class="card-body p-3" style="min-height: 250px; position: relative;">
                 <canvas id="timelineChart"></canvas>
                 <div id="timelineNoData" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--color-text-secondary);">
                     <i class="bi bi-info-circle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
@@ -180,167 +114,47 @@
     </div>
 </div>
 
-<!-- Charts Row -->
-<div class="row mt-4">
+<div class="row g-3 mb-3">
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Vulnerability Distribution</h5>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-bottom py-2">
+                <h6 class="mb-0 fw-semibold">Vulnerability Distribution</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body p-3">
                 <canvas id="vulnerabilityChart"></canvas>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Trends by Sector</h5>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-bottom py-2">
+                <h6 class="mb-0 fw-semibold">Trends by Sector</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body p-3">
                 <canvas id="trendsChart"></canvas>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Import Data Section -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Data Management</h5>
-            </div>
-            <div class="card-body">
-                <form asp-controller="Vulnerability" asp-action="Import" method="post">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label for="count" class="form-label">Number of vulnerabilities</label>
-                            <input type="number" class="form-control" id="count" name="count" value="50" min="1" max="2000" />
-                        </div>
-                        <div class="col-md-4">
-                            <label for="keyword" class="form-label">Keyword filter (optional)</label>
-                            <input type="text" class="form-control" id="keyword" name="keyword" placeholder="e.g., medical, hospital" />
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-download"></i> Import from NVD API
-                            </button>
-                        </div>
-                    </div>
-                </form>
+<!-- Intel Notes -->
+@if (!string.IsNullOrEmpty(intelNotes))
+{
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-2">
+                    <h6 class="mb-0 fw-semibold"><i class="bi bi-lightbulb me-2"></i>Intelligence Summary</h6>
+                </div>
+                <div class="card-body p-3">
+                    @Html.Raw(intelNotes)
+                </div>
             </div>
         </div>
     </div>
-</div>
+}
 
-<!-- Critical Vulnerabilities -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card border-danger">
-            <div class="card-header bg-danger text-white">
-                <h5><i class="bi bi-exclamation-triangle"></i> Critical to Act Now</h5>
-            </div>
-            <div class="card-body">
-                @if (critical.Any())
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>CVE ID</th>
-                                    <th>Description</th>
-                                    <th>Bio Impact</th>
-                                    <th>Human Impact</th>
-                                    <th>Sector</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var vuln in critical.Take(10))
-                                {
-                                <tr>
-                                    <td><strong class="mobile-cve">@vuln.CveId</strong></td>
-                                    <td class="description-cell">@(vuln.Description.Length > 100 ? vuln.Description.Substring(0, 100) + "..." : vuln.Description)</td>
-                                    <td><span class="badge bg-danger">@(vuln.BioImpactScore?.ToString("F1") ?? "N/A")</span></td>
-                                    <td><span class="badge bg-danger">@(vuln.HumanImpactScore?.ToString("F1") ?? "N/A")</span></td>
-                                    <td class="sector-cell">@(vuln.AffectedSector ?? "Unknown")</td>
-                                    <td class="date-cell">@(vuln.DateDiscovered?.ToString("yyyy-MM-dd") ?? "N/A")</td>
-                                    <td>
-                                        <a asp-controller="Vulnerability" asp-action="Details" asp-route-id="@vuln.Id" class="btn btn-sm btn-outline-primary">View</a>
-                                    </td>
-                                </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                    @if (critical.Count > 10)
-                    {
-                        <a asp-controller="Vulnerability" asp-action="Index" asp-route-priority="Critical to Act Now" class="btn btn-outline-danger">View All @critical.Count Critical Vulnerabilities</a>
-                    }
-                }
-                else
-                {
-                    <p class="text-muted">No critical vulnerabilities at this time.</p>
-                }
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Monitor Vulnerabilities -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card border-warning">
-            <div class="card-header bg-warning text-dark">
-                <h5><i class="bi bi-eye"></i> Monitor</h5>
-            </div>
-            <div class="card-body">
-                @if (monitor.Any())
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>CVE ID</th>
-                                    <th>Description</th>
-                                    <th>Bio Impact</th>
-                                    <th>Sector</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var vuln in monitor.Take(5))
-                                {
-                                    <tr>
-                                        <td><strong>@vuln.CveId</strong></td>
-                                        <td>@(vuln.Description.Length > 80 ? vuln.Description.Substring(0, 80) + "..." : vuln.Description)</td>
-                                        <td><span class="badge bg-warning">@(vuln.BioImpactScore?.ToString("F1") ?? "N/A")</span></td>
-                                        <td>@(vuln.AffectedSector ?? "Unknown")</td>
-                                        <td>@(vuln.DateDiscovered?.ToString("yyyy-MM-dd") ?? "N/A")</td>
-                                        <td>
-                                            <a asp-controller="Vulnerability" asp-action="Details" asp-route-id="@vuln.Id" class="btn btn-sm btn-outline-primary">View</a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                    @if (monitor.Count > 5)
-                    {
-                        <a asp-controller="Vulnerability" asp-action="Index" asp-route-priority="Monitor" class="btn btn-outline-warning">View All @monitor.Count Monitor Items</a>
-                    }
-                }
-                else
-                {
-                    <p class="text-muted">No vulnerabilities to monitor at this time.</p>
-                }
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script>

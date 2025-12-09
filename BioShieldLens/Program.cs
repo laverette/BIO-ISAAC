@@ -198,6 +198,21 @@ try
         }
         
         Console.WriteLine("Database connection successful and tables created/verified.");
+        
+        // Automatically reclassify all vulnerabilities with new urgency criteria on startup
+        try
+        {
+            var vulnerabilityService = scope.ServiceProvider.GetRequiredService<IVulnerabilityService>();
+            var updatedCount = vulnerabilityService.ReclassifyAllVulnerabilitiesAsync().GetAwaiter().GetResult();
+            if (updatedCount > 0)
+            {
+                Console.WriteLine($"Reclassified {updatedCount} vulnerabilities with new urgency criteria (Critical: 6.67-10, Monitor: 3.34-6.66, Low: 0-3.33).");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Could not reclassify vulnerabilities: {ex.Message}");
+        }
     }
 }
 catch (Exception ex)

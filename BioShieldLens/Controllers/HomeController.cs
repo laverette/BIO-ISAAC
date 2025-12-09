@@ -43,6 +43,15 @@ public class HomeController : Controller
                 .Take(10)
                 .ToList();
 
+            // Calculate counts for the 4 main vulnerability types (sectors)
+            var sectorCounts = new Dictionary<string, int>
+            {
+                ["Healthcare"] = allVulnerabilities.Count(v => v.AffectedSector == "Healthcare"),
+                ["Biotech"] = allVulnerabilities.Count(v => v.AffectedSector == "Biotech"),
+                ["Agriculture"] = allVulnerabilities.Count(v => v.AffectedSector == "Agriculture"),
+                ["General"] = allVulnerabilities.Count(v => string.IsNullOrEmpty(v.AffectedSector) || v.AffectedSector == "General")
+            };
+
             ViewBag.Critical = critical;
             ViewBag.Monitor = monitor;
             ViewBag.LowPriority = lowPriority;
@@ -50,6 +59,7 @@ public class HomeController : Controller
             ViewBag.Stats = stats;
             ViewBag.Trends = trends;
             ViewBag.SectorDistribution = sectorDistribution;
+            ViewBag.SectorCounts = sectorCounts;
 
             // Generate intel notes for all critical vulnerabilities (but AI will use sample for analysis)
             if (critical.Any())
@@ -68,6 +78,7 @@ public class HomeController : Controller
             ViewBag.Stats = new Dictionary<string, int> { { "Total", 0 }, { "Critical to Act Now", 0 }, { "Monitor", 0 }, { "Low Priority", 0 } };
             ViewBag.Trends = new List<Trend>();
             ViewBag.SectorDistribution = new List<object>();
+            ViewBag.SectorCounts = new Dictionary<string, int> { { "Healthcare", 0 }, { "Biotech", 0 }, { "Agriculture", 0 }, { "General", 0 } };
             ViewBag.IntelNotes = "Unable to load data. Please check database connection.";
             TempData["Error"] = "Database connection failed. The page will show empty data. Please check your connection string.";
         }

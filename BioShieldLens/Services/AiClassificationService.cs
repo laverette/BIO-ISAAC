@@ -79,7 +79,7 @@ Consider:
 - Biotechnology/laboratory systems: Moderate to high bio impact
 - Agricultural/food systems: Moderate bio impact
 - General IT systems: Lower bio impact unless they support critical biological infrastructure
-- Severity score should influence urgency level (9+ = Critical, 7-8.9 = Monitor, <7 = Low Priority unless bio impact is high)
+- Severity score determines urgency level: 6.67-10 = Critical to Act Now, 3.34-6.66 = Monitor, 0-3.33 = Low Priority
 
 Respond ONLY with valid JSON, no additional text.";
 
@@ -125,17 +125,20 @@ Respond ONLY with valid JSON, no additional text.";
                 return 0m;
             }
             
+            var severityScore = vulnerability.SeverityScore ?? 0m;
+            var aiUrgency = root.TryGetProperty("urgencyLevel", out var urgency) 
+                ? urgency.GetString() ?? DetermineUrgencyLevel(severityScore)
+                : DetermineUrgencyLevel(severityScore);
+            
             return new ClassificationResult
             {
                 BioImpactScore = root.TryGetProperty("bioImpactScore", out var bioScore) 
                     ? ParseDecimal(bioScore)
-                    : vulnerability.SeverityScore ?? 0m,
+                    : severityScore,
                 HumanImpactScore = root.TryGetProperty("humanImpactScore", out var humanScore) 
                     ? ParseDecimal(humanScore)
-                    : vulnerability.SeverityScore ?? 0m,
-                UrgencyLevel = root.TryGetProperty("urgencyLevel", out var urgency) 
-                    ? urgency.GetString() ?? "Monitor" 
-                    : "Monitor",
+                    : severityScore,
+                UrgencyLevel = DetermineUrgencyLevel(severityScore), // Always use severity-based classification
                 AffectedSector = root.TryGetProperty("affectedSector", out var sector) 
                     ? sector.GetString() 
                     : "General",
@@ -165,11 +168,13 @@ Respond ONLY with valid JSON, no additional text.";
         var biotechKeywords = new[] { "biotech", "laboratory", "lab", "pharmaceutical", "genetic" };
         var agricultureKeywords = new[] { "agriculture", "farming", "crop", "livestock", "food" };
 
+        var severityScore = vulnerability.SeverityScore ?? 0m;
+        
         if (medicalKeywords.Any(k => description.Contains(k)))
         {
             bioImpactScore = 8m;
             humanImpactScore = 9m;
-            urgencyLevel = vulnerability.SeverityScore >= 7 ? "Critical to Act Now" : "Monitor";
+            urgencyLevel = DetermineUrgencyLevel(severityScore);
             affectedSector = "Healthcare";
             intelNotes = "This vulnerability affects healthcare systems and could impact patient safety.";
         }
@@ -177,7 +182,7 @@ Respond ONLY with valid JSON, no additional text.";
         {
             bioImpactScore = 7m;
             humanImpactScore = 6m;
-            urgencyLevel = vulnerability.SeverityScore >= 7 ? "Critical to Act Now" : "Monitor";
+            urgencyLevel = DetermineUrgencyLevel(severityScore);
             affectedSector = "Biotech";
             intelNotes = "This vulnerability affects biotechnology or laboratory systems.";
         }
@@ -185,17 +190,16 @@ Respond ONLY with valid JSON, no additional text.";
         {
             bioImpactScore = 6m;
             humanImpactScore = 5m;
-            urgencyLevel = vulnerability.SeverityScore >= 7 ? "Monitor" : "Low Priority";
+            urgencyLevel = DetermineUrgencyLevel(severityScore);
             affectedSector = "Agriculture";
             intelNotes = "This vulnerability affects agricultural systems.";
         }
         else
         {
             // General classification based on severity
-            bioImpactScore = vulnerability.SeverityScore ?? 0m;
-            humanImpactScore = vulnerability.SeverityScore ?? 0m;
-            urgencyLevel = vulnerability.SeverityScore >= 9 ? "Critical to Act Now" :
-                          vulnerability.SeverityScore >= 7 ? "Monitor" : "Low Priority";
+            bioImpactScore = severityScore;
+            humanImpactScore = severityScore;
+            urgencyLevel = DetermineUrgencyLevel(severityScore);
         }
 
         return new ClassificationResult
@@ -443,6 +447,28 @@ IMPORTANT:
         summary.AppendLine("</div>");
 
         return summary.ToString();
+    }
+
+    /// <summary>
+    /// Determines urgency level based on severity score using new criteria:
+    /// Critical: 6.67-10
+    /// Monitor: 3.34-6.66
+    /// Low Priority: 0-3.33
+    /// </summary>
+    private string DetermineUrgencyLevel(decimal severityScore)
+    {
+        if (severityScore >= 6.67m)
+        {
+            return "Critical to Act Now";
+        }
+        else if (severityScore >= 3.34m)
+        {
+            return "Monitor";
+        }
+        else
+        {
+            return "Low Priority";
+        }
     }
 }
 
