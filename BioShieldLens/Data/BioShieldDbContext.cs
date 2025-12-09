@@ -13,6 +13,7 @@ public class BioShieldDbContext : DbContext
     public DbSet<Vulnerability> Vulnerabilities { get; set; }
     public DbSet<Trend> Trends { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<AuthUser> AuthUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +30,11 @@ public class BioShieldDbContext : DbContext
         modelBuilder.Entity<Trend>(entity =>
         {
             entity.HasIndex(e => new { e.Category, e.Month });
+        });
+
+        modelBuilder.Entity<AuthUser>(entity =>
+        {
+            entity.HasIndex(e => e.Email).IsUnique();
         });
     }
 }

@@ -42,9 +42,25 @@
                             <a class="nav-link" asp-controller="Vulnerability" asp-action="Index">Vulnerabilities</a>
                         </li>
                     </ul>
-                    <button id="darkModeToggle" class="btn btn-outline-secondary btn-sm" title="Switch to Dark Mode">
-                        <i class="bi bi-moon-fill" id="darkModeIcon"></i>
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        @if (Context.Session.GetString("UserEmail") != null)
+                        {
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle"></i> @Context.Session.GetString("UserName")
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li><span class="dropdown-item-text"><small class="text-muted">@Context.Session.GetString("UserEmail")</small></span></li>
+                                    <li><span class="dropdown-item-text"><small class="text-muted">Role: @Context.Session.GetString("UserRole")</small></span></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/Auth/Logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                                </ul>
+                            </div>
+                        }
+                        <button id="darkModeToggle" class="btn btn-outline-secondary btn-sm" title="Switch to Dark Mode">
+                            <i class="bi bi-moon-fill" id="darkModeIcon"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>

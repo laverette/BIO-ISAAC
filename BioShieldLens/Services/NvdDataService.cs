@@ -12,13 +12,39 @@ public class NvdDataService : INvdDataService
     private readonly ILogger<NvdDataService> _logger;
     private readonly IConfiguration _configuration;
 
-    // Keywords to identify bio-related vulnerabilities
+    // Keywords to identify bio-related vulnerabilities (EXPANDED for more coverage)
     private readonly string[] _bioKeywords = {
-        "medical", "hospital", "healthcare", "biotech", "biotechnology",
-        "laboratory", "lab", "pharmaceutical", "pharma", "clinical",
-        "diagnostic", "biomedical", "genetic", "dna", "rna", "sequencing",
-        "agriculture", "farming", "crop", "livestock", "food safety",
-        "epidemiology", "pathogen", "biosafety", "biosecurity"
+        // Healthcare & Medical
+        "medical", "hospital", "healthcare", "health", "patient", "clinic", "clinical", 
+        "doctor", "nurse", "surgical", "surgery", "emergency", "ambulance", "icu", "intensive care",
+        "telemedicine", "telehealth", "medical device", "pacemaker", "defibrillator", "ventilator",
+        "infusion pump", "x-ray", "mri", "ct scan", "imaging", "radiology", "cardiology",
+        "pharmacy", "prescription", "medication", "drug", "vaccine", "immunization",
+        
+        // Biotech & Laboratory
+        "biotech", "biotechnology", "laboratory", "lab", "lims", "lab information",
+        "biomedical", "genetic", "genomic", "dna", "rna", "sequencing", "genome",
+        "pcr", "diagnostic", "pathology", "microbiology", "virology", "bacteriology",
+        "biobank", "biobanking", "specimen", "sample", "cell culture", "tissue",
+        "biosafety", "biosecurity", "biohazard", "containment", "clean room",
+        "research", "clinical trial", "pharmaceutical", "pharma", "biopharmaceutical",
+        
+        // Agriculture & Food
+        "agriculture", "agricultural", "farming", "farm", "crop", "livestock", "animal",
+        "food safety", "food", "nutrition", "dairy", "meat", "poultry", "fishery",
+        "veterinary", "vet", "animal health", "plant", "seed", "fertilizer", "pesticide",
+        "irrigation", "harvest", "greenhouse", "aquaculture", "cattle", "pig", "chicken",
+        
+        // Public Health & Safety
+        "epidemiology", "epidemic", "pandemic", "outbreak", "infection", "contagious",
+        "pathogen", "virus", "bacteria", "disease", "illness", "public health",
+        "cdc", "who", "fda", "health department", "quarantine", "isolation",
+        "environmental health", "water quality", "sanitation", "hygiene",
+        
+        // Medical Records & Systems
+        "ehr", "emr", "electronic health", "medical record", "patient record",
+        "hipaa", "phi", "patient data", "health information", "medical data",
+        "hospital management", "hospital system", "healthcare system"
     };
 
     public NvdDataService(
@@ -44,9 +70,9 @@ public class NvdDataService : INvdDataService
 
         try
         {
-            // Use a more recent date range to avoid 404 errors with large requests
-            // NVD API works better with smaller, more recent date ranges
-            var startDate = "2024-10-01T00:00:00.000Z";
+            // Use a broader date range to get more vulnerabilities (last 6 months)
+            // This will capture more bio-related CVEs for the database
+            var startDate = DateTime.UtcNow.AddMonths(-6).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
             var endDate = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
             
             // Limit resultsPerPage to 200 (NVD API recommendation)

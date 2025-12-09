@@ -1,11 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using BioShieldLens.Data;
 using BioShieldLens.Services;
+using BioShieldLens.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
+
+// Add session support for authentication
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(8); // Session expires after 8 hours of inactivity
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
 
 // Add Swagger for API documentation
 builder.Services.AddEndpointsApiExplorer();
@@ -98,6 +109,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Enable session middleware
+app.UseSession();
+
+// Add authentication middleware (must be after UseSession)
+app.UseAuthenticationMiddleware();
+
 app.UseAuthorization();
 
 app.MapControllerRoute(
@@ -151,6 +168,29 @@ try
                 ) CHARACTER SET=utf8mb4;
             ");
             Console.WriteLine("Created AuditLogs table.");
+        }
+        catch (Exception)
+        {
+            // Table might already exist, ignore
+        }
+        
+        // Create AuthUsers table if it doesn't exist
+        try
+        {
+            db.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS AuthUsers (
+                    Id INT NOT NULL AUTO_INCREMENT,
+                    Email VARCHAR(255) NOT NULL,
+                    Name VARCHAR(100) NOT NULL,
+                    Role VARCHAR(100) NOT NULL DEFAULT 'Viewer',
+                    CreatedAt DATETIME(6) NOT NULL,
+                    LastLoginAt DATETIME(6) NULL,
+                    IsActive TINYINT(1) NOT NULL DEFAULT 1,
+                    PRIMARY KEY (Id),
+                    UNIQUE KEY IX_AuthUsers_Email (Email)
+                ) CHARACTER SET=utf8mb4;
+            ");
+            Console.WriteLine("Created AuthUsers table.");
         }
         catch (Exception)
         {

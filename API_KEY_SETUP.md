@@ -19,7 +19,7 @@ To enable AI-powered vulnerability classification, you need to add your OpenAI A
    - Add your API key to the `OpenAI.ApiKey` field:
    ```json
    "OpenAI": {
-     "ApiKey": "sk-proj-YOUR_KEY_HERE"
+     "ApiKey": "YOUR_API_KEY_HERE"
    }
    ```
 
