@@ -51,10 +51,10 @@ public class HomeController : Controller
             ViewBag.Trends = trends;
             ViewBag.SectorDistribution = sectorDistribution;
 
-            // Generate intel notes for critical vulnerabilities
+            // Generate intel notes for all critical vulnerabilities (but AI will use sample for analysis)
             if (critical.Any())
             {
-                ViewBag.IntelNotes = await _aiService.GenerateIntelNotesAsync(critical.Take(10).ToList());
+                ViewBag.IntelNotes = await _aiService.GenerateIntelNotesAsync(critical);
             }
         }
         catch (Exception ex)

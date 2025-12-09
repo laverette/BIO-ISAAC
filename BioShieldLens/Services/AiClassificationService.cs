@@ -233,38 +233,69 @@ Respond ONLY with valid JSON, no additional text.";
 
     private async Task<string> GenerateIntelNotesWithAIAsync(List<Vulnerability> vulnerabilities)
     {
-        var vulnerabilitySummary = string.Join("\n", vulnerabilities.Take(10).Select(v => 
-            $"- {v.CveId} ({v.SeverityScore?.ToString("F1") ?? "N/A"}): {v.Description.Substring(0, Math.Min(200, v.Description.Length))}..."));
+        var vulnerabilitySummary = string.Join("\n", vulnerabilities.Take(15).Select(v => 
+            $"- {v.CveId} (Severity: {v.SeverityScore?.ToString("F1") ?? "N/A"}, Sector: {v.AffectedSector ?? "General"}, Urgency: {v.UrgencyLevel ?? "Monitor"}): {v.Description.Substring(0, Math.Min(250, v.Description.Length))}..."));
         
-        var systemMessage = @"You are a cybersecurity analyst specializing in biosecurity. You MUST respond ONLY in the exact HTML format specified. Do NOT write paragraphs. Use ONLY bullet points in HTML lists.";
+        var criticalCount = vulnerabilities.Count(v => v.UrgencyLevel == "Critical to Act Now");
+        var monitorCount = vulnerabilities.Count(v => v.UrgencyLevel == "Monitor");
+        var sectorGroups = vulnerabilities
+            .Where(v => !string.IsNullOrEmpty(v.AffectedSector))
+            .GroupBy(v => v.AffectedSector)
+            .Select(g => new { Sector = g.Key, Count = g.Count(), Critical = g.Count(v => v.UrgencyLevel == "Critical to Act Now") })
+            .OrderByDescending(x => x.Count)
+            .Take(5);
+        
+        var systemMessage = @"You are a cybersecurity intelligence analyst specializing in biosecurity. Provide concise, actionable intelligence briefings. Keep responses brief and focused.";
 
-        var prompt = $@"Analyze these {vulnerabilities.Count} vulnerabilities from a biosecurity perspective.
+        var prompt = $@"Analyze {vulnerabilities.Count} cybersecurity vulnerabilities from a biosecurity perspective.
 
-Vulnerabilities:
+Sample Vulnerabilities (showing top {Math.Min(10, vulnerabilities.Count)} of {vulnerabilities.Count}):
 {vulnerabilitySummary}
 
-CRITICAL: Respond ONLY in this EXACT HTML format. NO paragraphs. NO explanations. Just the HTML structure below:
+Statistics:
+- Total critical vulnerabilities: {criticalCount}
+- Total requiring monitoring: {monitorCount}
+- Top affected sectors: {string.Join(", ", sectorGroups.Select(s => $"{s.Sector} ({s.Count} total, {s.Critical} critical)"))}
 
-<h6>Top Threats:</h6>
-<ul>
-<li>[One sentence about most critical threat]</li>
-<li>[One sentence about second critical threat]</li>
-<li>[One sentence about third critical threat]</li>
-</ul>
+Provide a CONCISE intelligence briefing in the following EXACT HTML format. Keep it brief - 1-2 sentences per bullet point:
 
-<h6>Affected Sectors:</h6>
-<ul>
-<li>[Sector name]: [brief impact description]</li>
-<li>[Sector name]: [brief impact description]</li>
-</ul>
+<div class=""intel-summary"">
+  <div class=""intel-section"">
+    <h5 class=""intel-heading""><i class=""bi bi-exclamation-triangle-fill""></i> Executive Summary</h5>
+    <p class=""intel-text"">[1-2 sentence overview highlighting {criticalCount} critical vulnerabilities and main risks to biological systems.]</p>
+  </div>
 
-<h6>Action Required:</h6>
-<ul>
-<li>[One actionable priority item]</li>
-<li>[One actionable priority item]</li>
-</ul>
+  <div class=""intel-section"">
+    <h5 class=""intel-heading""><i class=""bi bi-shield-exclamation""></i> Critical Threats</h5>
+    <ul class=""intel-list"">
+      <li><strong>[Top CVE ID]:</strong> [1 sentence: impact and why critical]</li>
+      <li><strong>[Second CVE ID]:</strong> [1 sentence: impact and why critical]</li>
+      <li><strong>[Third CVE ID]:</strong> [1 sentence: impact and why critical]</li>
+    </ul>
+  </div>
 
-Each bullet point must be ONE short sentence. Focus on biological/biosecurity implications.";
+  <div class=""intel-section"">
+    <h5 class=""intel-heading""><i class=""bi bi-building""></i> Sector Impact</h5>
+    <ul class=""intel-list"">
+      <li><strong>[Sector Name]:</strong> [1 sentence: number affected and key risk]</li>
+      <li><strong>[Sector Name]:</strong> [1 sentence: number affected and key risk]</li>
+    </ul>
+  </div>
+
+  <div class=""intel-section"">
+    <h5 class=""intel-heading""><i class=""bi bi-check-circle-fill""></i> Recommended Actions</h5>
+    <ol class=""intel-list"">
+      <li><strong>Immediate:</strong> [1 sentence: priority action]</li>
+      <li><strong>Short-term:</strong> [1 sentence: next steps]</li>
+    </ol>
+  </div>
+</div>
+
+IMPORTANT: 
+- Keep ALL text brief (1-2 sentences max per item)
+- Use actual CVE IDs from the sample
+- Focus on biological/biosecurity impact
+- Be concise and actionable";
 
         var requestBody = new
         {
@@ -274,8 +305,8 @@ Each bullet point must be ONE short sentence. Focus on biological/biosecurity im
                 new { role = "system", content = systemMessage },
                 new { role = "user", content = prompt }
             },
-            temperature = 0.2,
-            max_tokens = 400
+            temperature = 0.3,
+            max_tokens = 800
         };
 
         var jsonContent = JsonSerializer.Serialize(requestBody);
@@ -305,8 +336,12 @@ Each bullet point must be ONE short sentence. Focus on biological/biosecurity im
         }
         message = message.Trim();
 
-        // Ensure we have the basic structure
-        if (!message.Contains("<h6>") && !message.Contains("<ul>"))
+        // Ensure we have the basic structure - check for new format or old format
+        if (!message.Contains("<div class=\"intel-summary\">") && 
+            !message.Contains("intel-section") && 
+            !message.Contains("<h5") && 
+            !message.Contains("<h6>") && 
+            !message.Contains("<ul>"))
         {
             // If AI didn't follow format, fall back to keyword-based
             _logger.LogWarning("AI response did not follow structured format. Falling back to keyword-based summary.");
@@ -318,66 +353,94 @@ Each bullet point must be ONE short sentence. Focus on biological/biosecurity im
 
     private string GenerateIntelNotesWithKeywords(List<Vulnerability> vulnerabilities)
     {
-        // Generate simple structured summary based on patterns
+        // Generate structured summary based on patterns
         var criticalCount = vulnerabilities.Count(v => v.UrgencyLevel == "Critical to Act Now");
+        var monitorCount = vulnerabilities.Count(v => v.UrgencyLevel == "Monitor");
         var healthcareCount = vulnerabilities.Count(v => v.AffectedSector == "Healthcare");
         var biotechCount = vulnerabilities.Count(v => v.AffectedSector == "Biotech");
         var agricultureCount = vulnerabilities.Count(v => v.AffectedSector == "Agriculture");
+        var totalCount = vulnerabilities.Count;
 
-        var summary = new System.Text.StringBuilder();
-        summary.AppendLine("<h6>Top Threats:</h6>");
-        summary.AppendLine("<ul>");
-        
-        if (criticalCount > 0)
-        {
-            summary.AppendLine($"<li>{criticalCount} vulnerabilities require immediate action</li>");
-        }
-        
         var topThreats = vulnerabilities
             .OrderByDescending(v => v.SeverityScore ?? 0)
             .Take(3)
-            .Select(v => $"{v.CveId} (Severity: {v.SeverityScore?.ToString("F1") ?? "N/A"})");
+            .ToList();
+
+        var summary = new System.Text.StringBuilder();
+        summary.AppendLine("<div class=\"intel-summary\">");
+        
+        // Executive Summary
+        summary.AppendLine("  <div class=\"intel-section\">");
+        summary.AppendLine("    <h5 class=\"intel-heading\"><i class=\"bi bi-exclamation-triangle-fill\"></i> Executive Summary</h5>");
+        summary.AppendLine($"    <p class=\"intel-text\">{criticalCount} critical vulnerabilities identified requiring immediate action, posing significant risks to biological systems and healthcare infrastructure.</p>");
+        summary.AppendLine("  </div>");
+
+        // Critical Threats
+        summary.AppendLine("  <div class=\"intel-section\">");
+        summary.AppendLine("    <h5 class=\"intel-heading\"><i class=\"bi bi-shield-exclamation\"></i> Critical Threats</h5>");
+        summary.AppendLine("    <ul class=\"intel-list\">");
         
         foreach (var threat in topThreats)
         {
-            summary.AppendLine($"<li>{threat}</li>");
+            var severity = threat.SeverityScore?.ToString("F1") ?? "N/A";
+            var sector = threat.AffectedSector ?? "General";
+            summary.AppendLine($"      <li><strong>{threat.CveId}:</strong> Severity {severity} affecting {sector} systems - requires immediate patching.</li>");
         }
         
-        summary.AppendLine("</ul>");
-        summary.AppendLine("<h6>Affected Sectors:</h6>");
-        summary.AppendLine("<ul>");
+        summary.AppendLine("    </ul>");
+        summary.AppendLine("  </div>");
+
+        // Sector Impact
+        summary.AppendLine("  <div class=\"intel-section\">");
+        summary.AppendLine("    <h5 class=\"intel-heading\"><i class=\"bi bi-building\"></i> Sector Impact</h5>");
+        summary.AppendLine("    <ul class=\"intel-list\">");
         
         if (healthcareCount > 0)
         {
-            summary.AppendLine($"<li>Healthcare: {healthcareCount} vulnerabilities</li>");
+            var criticalHealthcare = vulnerabilities.Count(v => v.AffectedSector == "Healthcare" && v.UrgencyLevel == "Critical to Act Now");
+            summary.AppendLine($"      <li><strong>Healthcare:</strong> {healthcareCount} vulnerabilities ({criticalHealthcare} critical) affecting patient care systems and medical devices.</li>");
         }
         
         if (biotechCount > 0)
         {
-            summary.AppendLine($"<li>Biotech: {biotechCount} vulnerabilities</li>");
+            var criticalBiotech = vulnerabilities.Count(v => v.AffectedSector == "Biotech" && v.UrgencyLevel == "Critical to Act Now");
+            summary.AppendLine($"      <li><strong>Biotechnology:</strong> {biotechCount} vulnerabilities ({criticalBiotech} critical) impacting laboratory systems and research data.</li>");
         }
         
         if (agricultureCount > 0)
         {
-            summary.AppendLine($"<li>Agriculture: {agricultureCount} vulnerabilities</li>");
+            var criticalAg = vulnerabilities.Count(v => v.AffectedSector == "Agriculture" && v.UrgencyLevel == "Critical to Act Now");
+            summary.AppendLine($"      <li><strong>Agriculture:</strong> {agricultureCount} vulnerabilities ({criticalAg} critical) affecting food safety and crop management systems.</li>");
         }
         
         if (healthcareCount == 0 && biotechCount == 0 && agricultureCount == 0)
         {
-            summary.AppendLine("<li>General: Multiple sectors affected</li>");
+            summary.AppendLine("      <li><strong>General Infrastructure:</strong> Vulnerabilities span multiple sectors affecting general IT infrastructure supporting biosecurity operations.</li>");
         }
         
-        summary.AppendLine("</ul>");
-        summary.AppendLine("<h6>Action Required:</h6>");
-        summary.AppendLine("<ul>");
+        summary.AppendLine("    </ul>");
+        summary.AppendLine("  </div>");
+
+        // Recommended Actions
+        summary.AppendLine("  <div class=\"intel-section\">");
+        summary.AppendLine("    <h5 class=\"intel-heading\"><i class=\"bi bi-check-circle-fill\"></i> Recommended Actions</h5>");
+        summary.AppendLine("    <ol class=\"intel-list\">");
         
         if (criticalCount > 0)
         {
-            summary.AppendLine("<li>Prioritize patching for critical vulnerabilities immediately</li>");
+            summary.AppendLine($"      <li><strong>Immediate:</strong> Patch all {criticalCount} critical vulnerabilities and isolate affected systems if patching cannot be completed immediately.</li>");
+        }
+        else
+        {
+            summary.AppendLine("      <li><strong>Immediate:</strong> Review vulnerabilities and prioritize based on infrastructure. Ensure monitoring systems are active.</li>");
         }
         
-        summary.AppendLine("<li>Review individual vulnerabilities for detailed impact assessment</li>");
-        summary.AppendLine("</ul>");
+        summary.AppendLine("      <li><strong>Short-term:</strong> Complete remediation for high-severity items and conduct security assessments of affected systems.</li>");
+        
+        summary.AppendLine("    </ol>");
+        summary.AppendLine("  </div>");
+
+        summary.AppendLine("</div>");
 
         return summary.ToString();
     }
