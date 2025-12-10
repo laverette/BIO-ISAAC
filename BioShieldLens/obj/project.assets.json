@@ -2939,11 +2939,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\GP3\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj",
+      "projectUniqueName": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-Final\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj",
       "projectName": "BioShieldLens",
-      "projectPath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\GP3\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj",
+      "projectPath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-Final\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj",
       "packagesPath": "C:\\Users\\logan\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\GP3\\BIO-ISAAC\\BioShieldLens\\obj\\",
+      "outputPath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-Final\\BIO-ISAAC\\BioShieldLens\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\logan\\AppData\\Roaming\\NuGet\\NuGet.Config"

@@ -9,8 +9,7 @@ To enable AI-powered vulnerability classification:
 1. **Get the API Key from your team lead** (shared via secure channel)
 
 2. **Add it to your configuration**:
-   - Copy `appsettings.example.json` to `appsettings.json` (if it doesn't exist)
-   - OR edit `appsettings.Development.json`
+   edit `appsettings.json`
    - Add your API key:
    ```json
    "OpenAI": {
@@ -22,6 +21,20 @@ To enable AI-powered vulnerability classification:
 
 See `API_KEY_SETUP.md` for detailed instructions.
 
+### Authentication
+
+The application requires authentication to access. To log in:
+
+1. **Use an authorized email address**:
+   - `@crimson.ua.edu`
+   - `@bioisac.com`
+
+2. **Enter the invitation code**: `BioShield2025!`
+
+3. **Provide your name** when logging in
+
+**Note**: Only users with authorized email domains and the correct invitation code can access the system.
+
 ## Features
 
 - AI-powered vulnerability classification using OpenAI
@@ -32,7 +45,6 @@ See `API_KEY_SETUP.md` for detailed instructions.
 
 ## Important Notes
 
-- **Never commit `appsettings.json`** - it contains sensitive API keys
 - The application will work without an API key (using keyword-based classification)
 - AI classification requires a valid OpenAI API key
 

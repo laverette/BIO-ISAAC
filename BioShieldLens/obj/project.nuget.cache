@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "okZ1XxcYnWU=",
+  "dgSpecHash": "wWjyKsNFVeM=",
   "success": true,
-  "projectFilePath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\GP3\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj",
+  "projectFilePath": "C:\\Users\\logan\\Documents\\Source\\Repos\\MIS321\\BIO-Final\\BIO-ISAAC\\BioShieldLens\\BioShieldLens.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\logan\\.nuget\\packages\\csvhelper\\33.1.0\\csvhelper.33.1.0.nupkg.sha512",
     "C:\\Users\\logan\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
