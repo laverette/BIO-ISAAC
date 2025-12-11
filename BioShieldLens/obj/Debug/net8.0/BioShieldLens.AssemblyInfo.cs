@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BioShieldLens")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b7d0998651053ec59b97cb3bc30271f1e70837a1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ffb192bfebd478ad728fd7b2796cf727abf2e9ff")]
 [assembly: System.Reflection.AssemblyProductAttribute("BioShieldLens")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BioShieldLens")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
